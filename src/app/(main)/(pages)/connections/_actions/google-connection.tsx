@@ -1,38 +1,48 @@
 'use server'
-//WIP
-import clerk from '@clerk/clerk-sdk-node'
-import { auth } from '@clerk/nextjs/server'
-import { google } from 'googleapis'
+import { clerkClient } from '@clerk/clerk-sdk-node';
+import { auth } from '@clerk/nextjs/server';
+import { google } from 'googleapis';
 
 export const getFileMetaData = async () => {
-  'use server'
+  'use server';
   const oauth2Client = new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,
     process.env.OAUTH2_REDIRECT_URI
-  )
+  );
 
-  const { userId } = auth()
+  const { userId } = auth();
 
   if (!userId) {
-    return { message: 'User not found' }
+    return { message: 'User not found' };
   }
 
-  const clerkResponse = await clerk.users.getUserOauthAccessToken(
-    userId,
-    'oauth_google'
-  )
+  try {
+    const clerkResponse = await clerkClient.users.getUserOauthAccessToken(
+      userId,
+      'oauth_google'
+    );
 
-  const accessToken = clerkResponse[0].token
+    if (!clerkResponse || !clerkResponse.data || clerkResponse.data.length === 0) {
+      throw new Error('No OAuth access token found for the user.');
+    }
 
-  oauth2Client.setCredentials({
-    access_token: accessToken,
-  })
+    const accessToken = clerkResponse.data[0].token;
 
-  const drive = google.drive({ version: 'v3', auth: oauth2Client })
-  const response = await drive.files.list()
+    oauth2Client.setCredentials({
+      access_token: accessToken,
+    });
 
-  if (response) {
-    return response.data
+    const drive = google.drive({ version: 'v3', auth: oauth2Client });
+    const response = await drive.files.list();
+
+    if (response) {
+      return response.data;
+    } else {
+      throw new Error('Failed to retrieve file metadata from Google Drive.');
+    }
+  } catch (error) {
+    console.error('Error occurred while retrieving file metadata:', error);
+    return { error: error};
   }
-}
+};
