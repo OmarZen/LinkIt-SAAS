@@ -12,6 +12,9 @@ const font = DM_Sans({ subsets: ['latin'] })
 export const metadata: Metadata = {
   title: 'LinkIt.',
   description: 'Automate Your Work With Fuzzie.',
+  icons: {
+    icon: ['/favicon.ico'],
+  },
 }
 
 export default function RootLayout({
