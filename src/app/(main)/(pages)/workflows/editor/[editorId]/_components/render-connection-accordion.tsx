@@ -1,4 +1,5 @@
 'use client'
+import React from 'react'
 import ConnectionCard from '@/app/(main)/(pages)/connections/_components/connection-card'
 import { AccordionContent } from '@/components/ui/accordion'
 import MultipleSelector from '@/components/ui/multiple-selector'
@@ -6,38 +7,76 @@ import { Connection } from '@/lib/types'
 import { useNodeConnections } from '@/providers/connections-provider'
 import { EditorState } from '@/providers/editor-provider'
 import { useFuzzieStore } from '@/store'
-import React from 'react'
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from '@/components/ui/command'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import { CheckIcon, ChevronsUpDown } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
-type Props = {}
+const frameworks = [
+  {
+    value: 'next.js',
+    label: 'Next.js',
+  },
+  {
+    value: 'sveltekit',
+    label: 'SvelteKit',
+  },
+  {
+    value: 'nuxt.js',
+    label: 'Nuxt.js',
+  },
+  {
+    value: 'remix',
+    label: 'Remix',
+  },
+  {
+    value: 'astro',
+    label: 'Astro',
+  },
+]
 
 const RenderConnectionAccordion = ({
-    connection,
-    state,
-  }: {
-    connection: Connection
-    state: EditorState
-  }) => {
-    const {
-      title,
-      image,
-      description,
-      connectionKey,
-      accessTokenKey,
-      alwaysTrue,
-      slackSpecial,
-    } = connection
-    const { nodeConnection } = useNodeConnections()
+  connection,
+  state,
+}: {
+  connection: Connection
+  state: EditorState
+}) => {
+  const {
+    title,
+    image,
+    description,
+    connectionKey,
+    accessTokenKey,
+    alwaysTrue,
+    slackSpecial,
+  } = connection
+
+  const { nodeConnection } = useNodeConnections()
   const { slackChannels, selectedSlackChannels, setSelectedSlackChannels } =
     useFuzzieStore()
 
-    const connectionData = (nodeConnection as any)[connectionKey]
+  const [open, setOpen] = React.useState(false)
+  const [value, setValue] = React.useState('')
 
-    const isConnected =
+  const connectionData = (nodeConnection as any)[connectionKey]
+
+  const isConnected =
     alwaysTrue ||
     (nodeConnection[connectionKey] &&
       accessTokenKey &&
       connectionData[accessTokenKey!])
-
 
   return (
     <AccordionContent key={title}>
